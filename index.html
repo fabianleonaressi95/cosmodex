@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COSMO-DEX // Quasicrystal Interceptor</title>
+    <style>
+        body {
+            background-color: #0e1117;
+            color: #f0f6fc;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #canvas {
+            border: 2px solid #21262d;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+        .loader {
+            position: absolute;
+            font-size: 20px;
+            color: #00d4ff;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+    </style>
+    <!-- Pygame-CE / Pygbag WebAssembly Loader -->
+    <link rel="stylesheet" href="https://pygame-web.github.io/releases/0.8/pygbag.css">
+</head>
+<body>
+
+    <div class="loader" id="loading">Inizializzazione Reticolo Aperiodico in corso...</div>
+
+    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+
+    <script type="py-script" src="main.py"></script>
+    <script src="https://pygame-web.github.io/releases/0.8/pygbag.js"></script>
+
+    <script>
+        // Rimuove la scritta di caricamento quando il gioco si avvia
+        window.addEventListener('pygbag-ready', () => {
+            const loader = document.getElementById('loading');
+            if (loader) loader.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
