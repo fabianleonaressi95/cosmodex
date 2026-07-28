@@ -409,6 +409,34 @@
         }
 
         window.onload = init;
+
+    // ... (codice Three.js precedente) ...
+
+    // Funzione di simulazione Smart Contract & Hash locale in JS
+    function sealMissionBlock(coherence, l2Error) {
+        if (coherence >= 98.0 && l2Error < 0.02) {
+            const timestamp = Date.now();
+            const dataString = `${timestamp}-${coherence}-${l2Error}-COSMODEX_GENESIS`;
+            
+            // Generazione hash crittografico simulato via SubtleCrypto (SHA-256 nativo del browser)
+            crypto.subtle.digest("SHA-256", new TextEncoder().encode(dataString)).then(buffer => {
+                const hashArray = Array.from(new Uint8Array(buffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                console.log("--- BLOCCO APERIODICO SIGILLATO ---");
+                console.log("Hash:", hashHex);
+                console.log("Stato: COMPLETE (REWARD UNLOCKED)");
+                
+                // Salvataggio nel LocalStorage del browser (equivalente locale di SQLite)
+                localStorage.setItem(`cosmodex_block_${timestamp}`, JSON.stringify({
+                    hash: hashHex,
+                    coherence: coherence,
+                    l2Error: l2Error,
+                    timestamp: timestamp
+                }));
+            });
+        }
+    }
     </script>
 </body>
 </html>
