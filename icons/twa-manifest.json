@@ -1,0 +1,22 @@
+{
+  "name": "COSMODEX 3D",
+  "shortName": "COSMODEX",
+  "startUrl": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "themeColor": "#0A0A16",
+  "backgroundColor": "#05050A",
+  "host": "localhost",
+  "packageId": "com.fabianleo.cosmodex",
+  "signingKey": {
+    "path": "/home/fabianleo/aperiodic_service/my-app/android.keystore",
+    "alias": "android"
+  },
+  "iconUrl": "http://localhost:8080/icon-512.png",
+  "maskableIconUrl": "",
+  "webManifestUrl": "http://localhost:8080/manifest.json",
+  "generatorApp": "bubblewrap-cli",
+  "enableNotifications": false,
+  "shortcuts": [],
+  "shareTarget": {}
+}

@@ -1,56 +1,415 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COSMO-DEX // Quasicrystal Interceptor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COSMODEX // Senemosìa Punto Zero</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a16">
     <style>
-        body {
-            background-color: #0e1117;
-            color: #f0f6fc;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #05050a;
             font-family: 'Courier New', Courier, monospace;
+            color: #00ffcc;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            justify-content: space-between;
+            padding: 20px;
         }
-        #canvas {
-            border: 2px solid #21262d;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background: rgba(5, 5, 10, 0.7);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
         }
-        .loader {
+        .title-block h1 {
+            font-size: 16px;
+            letter-spacing: 2px;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+        .title-block p {
+            font-size: 10px;
+            color: #8892b0;
+            margin-top: 4px;
+        }
+        .stats-block {
+            text-align: right;
+            font-size: 12px;
+        }
+        .stats-block span {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+        .hud-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .controls-hint {
+            background: rgba(5, 5, 10, 0.7);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 11px;
+            backdrop-filter: blur(5px);
+        }
+        .virtual-joystick {
+            pointer-events: auto;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-ctrl {
+            background: rgba(0, 255, 204, 0.15);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-family: inherit;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: background 0.2s;
+        }
+        .btn-ctrl:active {
+            background: rgba(0, 255, 204, 0.4);
+        }
+        #start-screen {
             position: absolute;
-            font-size: 20px;
-            color: #00d4ff;
-            animation: pulse 1.5s infinite;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 10, 0.92);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
         }
-        @keyframes pulse {
-            0% { opacity: 0.3; }
-            50% { opacity: 1; }
-            100% { opacity: 0.3; }
+        #start-screen h2 {
+            font-size: 28px;
+            color: #00ffcc;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.7);
+            letter-spacing: 3px;
+        }
+        #start-screen p {
+            color: #8892b0;
+            max-width: 450px;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .btn-start {
+            background: linear-gradient(135deg, #00ffcc, #0077ff);
+            color: #05050a;
+            border: none;
+            padding: 16px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            font-family: inherit;
+            border-radius: 6px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-start:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.7);
         }
     </style>
-    <!-- Pygame-CE / Pygbag WebAssembly Loader -->
-    <link rel="stylesheet" href="https://pygame-web.github.io/releases/0.8/pygbag.css">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div class="loader" id="loading">Inizializzazione Reticolo Aperiodico in corso...</div>
+    <div id="canvas-container"></div>
 
-    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="start-screen">
+        <h2>COSMODEX // 3D</h2>
+        <p>Sintonizzazione Armonica & Navigazione a Rete Aperiodica. Pilota la sonda per attivare i nodi strutturali ed elevare la coerenza geometrica del sistema.</p>
+        <button class="btn-start" onclick="startGame()">AVVIA SISTEMA</button>
+    </div>
 
-    <script type="py-script" src="main.py"></script>
-    <script src="https://pygame-web.github.io/releases/0.8/pygbag.js"></script>
+    <div id="hud">
+        <div class="hud-header">
+            <div class="title-block">
+                <h1>SENEMOSÌA PUNTO ZERO</h1>
+                <p>MODULO APERIODICO // ATTIVO</p>
+            </div>
+            <div class="stats-block">
+                <div>COERENZA: <span id="score">0</span></div>
+                <div>ATTIVAZIONE: <span id="energy">100</span>%</div>
+            </div>
+        </div>
+        <div class="hud-footer">
+            <div class="controls-hint">
+                Usa i tasti <b>← / →</b> o i pulsanti per sintonizzare la sonda.
+            </div>
+            <div class="virtual-joystick">
+                <button class="btn-ctrl" ontouchstart="moveLeft()" onmousedown="moveLeft()">◀</button>
+                <button class="btn-ctrl" ontouchstart="moveRight()" onmousedown="moveRight()">▶</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Rimuove la scritta di caricamento quando il gioco si avvia
-        window.addEventListener('pygbag-ready', () => {
-            const loader = document.getElementById('loading');
-            if (loader) loader.style.display = 'none';
-        });
+        let scene, camera, renderer, player, clock;
+        let structuralNodes = [];
+        let collectibles = [];
+        let gridLines = [];
+        let score = 0;
+        let energy = 100;
+        let gameActive = false;
+        let playerTargetX = 0;
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            
+            // Scene & Camera
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x05050a, 0.035);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 4, 8);
+            camera.lookAt(0, 0, -5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0x00ffcc, 2, 50);
+            pointLight.position.set(0, 10, 0);
+            scene.add(pointLight);
+
+            const goldLight = new THREE.PointLight(0xffaa00, 2, 50);
+            goldLight.position.set(5, 5, -10);
+            scene.add(goldLight);
+
+            // Create Player (Harmonic Quantum Probe)
+            const playerGeo = new THREE.ConeGeometry(0.6, 1.5, 4);
+            const playerMat = new THREE.MeshStandardMaterial({ 
+                color: 0x00ffcc, 
+                roughness: 0.2, 
+                metalness: 0.8,
+                emissive: 0x004433 
+            });
+            player = new THREE.Mesh(playerGeo, playerMat);
+            player.rotation.x = Math.PI / 2;
+            player.position.set(0, 0, 0);
+            scene.add(player);
+
+            // Create Environment Grid
+            createEnvironment();
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('keydown', onKeyDown);
+
+            // Animation Loop
+            animate();
+        }
+
+        function createEnvironment() {
+            for (let i = 0; i < 40; i++) {
+                const zPos = -i * 5;
+                
+                const geo = new THREE.BoxGeometry(0.8, 4, 0.8);
+                const mat = new THREE.MeshStandardMaterial({ color: 0x112233, wireframe: true });
+                
+                const leftPillar = new THREE.Mesh(geo, mat);
+                leftPillar.position.set(-6, 2, zPos);
+                scene.add(leftPillar);
+                gridLines.push(leftPillar);
+
+                const rightPillar = new THREE.Mesh(geo, mat);
+                rightPillar.position.set(6, 2, zPos);
+                scene.add(rightPillar);
+                gridLines.push(rightPillar);
+
+                if (i > 5) {
+                    if (Math.random() > 0.4) spawnStructuralNode(zPos);
+                    if (Math.random() > 0.5) spawnCollectible(zPos);
+                }
+            }
+        }
+
+        // Sostituiti gli ostacoli con Nodi Strutturali Aperiodici di risonanza armonica
+        function spawnStructuralNode(z) {
+            const types = [
+                new THREE.BoxGeometry(1.2, 1.2, 1.2),
+                new THREE.OctahedronGeometry(1),
+                new THREE.TetrahedronGeometry(1.2)
+            ];
+            const geo = types[Math.floor(Math.random() * types.length)];
+            const mat = new THREE.MeshStandardMaterial({ color: 0x00ffcc, wireframe: true, emissive: 0x003322 });
+            const node = new THREE.Mesh(geo, mat);
+            
+            const lane = (Math.floor(Math.random() * 3) - 1) * 2.5;
+            node.position.set(lane, 0.8, z);
+            node.isActivated = false;
+            scene.add(node);
+            structuralNodes.push(node);
+        }
+
+        function spawnCollectible(z) {
+            const geo = new THREE.IcosahedronGeometry(0.6);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0x553300, roughness: 0.1 });
+            const item = new THREE.Mesh(geo, mat);
+            
+            const lane = (Math.floor(Math.random() * 3) - 1) * 2.5;
+            item.position.set(lane, 1, z);
+            scene.add(item);
+            collectibles.push(item);
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            gameActive = true;
+            score = 0;
+            energy = 100;
+            updateHUD();
+        }
+
+        function moveLeft() {
+            if (playerTargetX > -2.5) playerTargetX -= 2.5;
+        }
+
+        function moveRight() {
+            if (playerTargetX < 2.5) playerTargetX += 2.5;
+        }
+
+        function onKeyDown(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'a') moveLeft();
+            if (e.key === 'ArrowRight' || e.key === 'd') moveRight();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function updateHUD() {
+            document.getElementById('score').innerText = score;
+            document.getElementById('energy').innerText = energy;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!gameActive) {
+                renderer.render(scene, camera);
+                return;
+            }
+
+            const delta = clock.getDelta();
+            const speed = 18 * delta;
+
+            // Smooth player lateral movement
+            player.position.x += (playerTargetX - player.position.x) * 12 * delta;
+            player.rotation.z = (playerTargetX - player.position.x) * -0.2;
+
+            // Move Environment
+            gridLines.forEach(pillar => {
+                pillar.position.z += speed;
+                if (pillar.position.z > 5) {
+                    pillar.position.z -= 200;
+                }
+            });
+
+            // Gestione Risonanza Nodi Aperiodici (Niente crash, solo attivazione armonica)
+            structuralNodes.forEach(node => {
+                node.position.z += speed;
+                node.rotation.x += 1 * delta;
+                node.rotation.y += 1.5 * delta;
+
+                // Interazione di sintonizzazione
+                if (!node.isActivated && Math.abs(node.position.z - player.position.z) < 1.0 && Math.abs(node.position.x - player.position.x) < 0.8) {
+                    node.isActivated = true;
+                    node.material.color.setHex(0xffaa00);
+                    node.material.emissive.setHex(0x553300);
+                    score += 50;
+                    energy = Math.min(100, energy + 5);
+                    updateHUD();
+                }
+
+                if (node.position.z > 5) {
+                    node.position.z = -200;
+                    node.isActivated = false;
+                    node.material.color.setHex(0x00ffcc);
+                    node.material.emissive.setHex(0x003322);
+                    node.position.x = (Math.floor(Math.random() * 3) - 1) * 2.5;
+                }
+            });
+
+            // Move Collectibles
+            collectibles.forEach(item => {
+                item.position.z += speed;
+                item.rotation.y += 2 * delta;
+
+                if (Math.abs(item.position.z - player.position.z) < 1.0 && Math.abs(item.position.x - player.position.x) < 0.8) {
+                    score += 100;
+                    energy = Math.min(100, energy + 15);
+                    item.position.z = -200;
+                    updateHUD();
+                }
+
+                if (item.position.z > 5) {
+                    item.position.z = -200;
+                    item.position.x = (Math.floor(Math.random() * 3) - 1) * 2.5;
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
+
