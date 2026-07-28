@@ -1,4 +1,3 @@
-cat << 'EOF' > main.py
 import streamlit as st
 import math
 import time
@@ -96,4 +95,3 @@ with tab3:
         "phase_shift": st.session_state.phase,
         "security_level": "Encrypted-QKD"
     })
-EOF
